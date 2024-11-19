@@ -14,7 +14,7 @@ services:
     image: postgres:13
     restart: always
     environment:
-      POSTGRES_DB: mydatabase
+      POSTGRES_DB: notes
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
