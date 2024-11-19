@@ -17,10 +17,8 @@ RUN poetry config virtualenvs.create false && poetry install --no-dev && poetry 
 # Копируем исходный код приложения
 COPY ./ /
 
-RUN alembic upgrade head
-
 # Открываем порт, на котором будет работать FastAPI
 EXPOSE 8000
 
 # Команда для запуска приложения
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
