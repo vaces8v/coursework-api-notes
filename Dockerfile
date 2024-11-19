@@ -14,6 +14,8 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false && poetry install --no-dev && poetry add python-jose
 
+RUN mkdir app
+
 # Копируем исходный код приложения
 COPY ./app /app
 
