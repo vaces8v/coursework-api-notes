@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from services import tag as tag_service
-from dto.tag_dto import TagRequest, TagDB
+from app.services import tag as tag_service
+from app.dto.tag_dto import TagRequest, TagDB
 
 router = APIRouter(prefix="/tags", tags=["tags"])
 

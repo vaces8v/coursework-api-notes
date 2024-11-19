@@ -2,9 +2,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
-from dto.note_dto import NoteCreateRequest, NoteResponse
+from app.dto.note_dto import NoteCreateRequest, NoteResponse
 
-from services import note as note_service
+from app.services import note as note_service
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
