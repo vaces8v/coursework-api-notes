@@ -1,7 +1,7 @@
 from database.base_crud import BaseCRUD
 from dto.tag_dto import TagRequest, TagDB
 from models.notes import Tag
-
+import random, string
 
 class TagCRUD(BaseCRUD):
     model = Tag

@@ -18,7 +18,19 @@ class NoteCRUD(BaseCRUD):
             query = (
                 select(cls.model)
                 .options(joinedload(cls.model.tags).joinedload(NotesTags.tag))
-                .where(cls.model.user_id == user_id)
+                .where(cls.model.user_id == user_id, cls.model.is_archive == False)
+                .order_by(cls.model.created_at.desc())
+            )
+            res = await session.execute(query)
+            return res.unique().scalars().all()
+
+    @classmethod
+    async def get_all_archive(cls, user_id: int):
+        async with async_session_maker() as session:
+            query = (
+                select(cls.model)
+                .options(joinedload(cls.model.tags).joinedload(NotesTags.tag))
+                .where(cls.model.user_id == user_id, cls.model.is_archive == True)
                 .order_by(cls.model.created_at.desc())
             )
             res = await session.execute(query)
@@ -71,13 +83,18 @@ async def get_all_my(token: str):
         for note in notes
     ]
 
+async def get_all_my_archives(token: str):
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Не валидный токен")
 
-async def get_by_id(note_id: int) -> NoteResponse:
-    note = await NoteCRUD.get_one(note_id)
-    if not note:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    user_id = payload.get("sub")
+    if not isinstance(user_id, str) or not user_id:
+        raise HTTPException(status_code=401, detail="Не валидный токен")
 
-    return NoteResponse(
+    notes = await NoteCRUD.get_all_archive(user_id=int(user_id))
+    return [
+        NoteResponse(
             id=note.id,
             title=note.title,
             user_id=note.user_id,
@@ -94,6 +111,31 @@ async def get_by_id(note_id: int) -> NoteResponse:
                 for note_tag in note.tags
             ]
         )
+        for note in notes
+    ]
+
+async def get_by_id(note_id: int) -> NoteResponse:
+    note = await NoteCRUD.get_one(note_id)
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return NoteResponse(
+        id=note.id,
+        title=note.title,
+        user_id=note.user_id,
+        description=note.description,
+        is_archive=note.is_archive,
+        created_at=note.created_at,
+        updated_at=note.updated_at,
+        tags=[
+            TagResponse(
+                id=note_tag.tag.id,
+                name=note_tag.tag.name,
+                color=note_tag.tag.color,
+            )
+            for note_tag in note.tags
+        ]
+    )
 
 
 async def create_note(data: NoteCreateRequest, token: str):
@@ -113,6 +155,7 @@ async def create_note(data: NoteCreateRequest, token: str):
 
     return {"ok": True, "note_id": note_id}
 
+
 async def delete_by_id(note_id: int, token: str):
     payload = decode_access_token(token)
     if payload is None:
@@ -129,3 +172,38 @@ async def delete_by_id(note_id: int, token: str):
         raise HTTPException(status_code=403, detail="Изменения не доступны")
 
     await NoteCRUD.delete(model_id=note_id)
+
+
+async def archive_add_by_id(note_id: int, token: str):
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Не валидный токен")
+
+    user_id = payload.get("sub")
+    if not isinstance(user_id, str) or not user_id:
+        raise HTTPException(status_code=401, detail="Не валидный токен")
+
+    note = await NoteCRUD.find_by_id(model_id=note_id)
+    if note is None:
+        raise HTTPException(status_code=404, detail="Запись не найдена")
+    if note.user_id != int(user_id):
+        raise HTTPException(status_code=403, detail="Изменения не доступны")
+
+    await NoteCRUD.update(model_id=note_id, is_archive=True)
+
+async def archive_remove_by_id(note_id: int, token: str):
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Не валидный токен")
+
+    user_id = payload.get("sub")
+    if not isinstance(user_id, str) or not user_id:
+        raise HTTPException(status_code=401, detail="Не валидный токен")
+
+    note = await NoteCRUD.find_by_id(model_id=note_id)
+    if note is None:
+        raise HTTPException(status_code=404, detail="Запись не найдена")
+    if note.user_id != int(user_id):
+        raise HTTPException(status_code=403, detail="Изменения не доступны")
+
+    await NoteCRUD.update(model_id=note_id, is_archive=False)

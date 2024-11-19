@@ -14,6 +14,18 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 async def get_all_my_notes(token: Annotated[str, Depends(oauth2_scheme)]):
     return await note_service.get_all_my(token)
 
+@router.get("/archives")
+async def get_all_my_notes_archives(token: Annotated[str, Depends(oauth2_scheme)]):
+    return await note_service.get_all_my_archives(token)
+
+@router.patch("/archive/add/{note_id}")
+async def add_archive_by_id(note_id: int, token: Annotated[str, Depends(oauth2_scheme)]):
+    return await note_service.archive_add_by_id(note_id, token)
+
+@router.patch("/archive/remove/{note_id}")
+async def remove_archive_by_id(note_id: int, token: Annotated[str, Depends(oauth2_scheme)]):
+    return await note_service.archive_remove_by_id(note_id, token)
+
 @router.get("/{id}")
 async def get_by_id(id: int) -> NoteResponse:
     return await note_service.get_by_id(id)
