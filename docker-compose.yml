@@ -7,9 +7,6 @@ services:
       - 8000:8000
     volumes:
       - ./app:/app
-    environment:
-      - ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@db/notes
     depends_on:
       - db
 
