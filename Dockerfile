@@ -8,17 +8,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc
 RUN pip install poetry
 
 # Установим рабочую директорию
-WORKDIR /app
+WORKDIR /
 
 # Копируем файлы конфигурации Poetry и устанавливаем зависимости
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false && poetry install --no-dev && poetry add python-jose
 
 # Копируем исходный код приложения
-COPY ./app /app
+COPY ./ /
 
 # Открываем порт, на котором будет работать FastAPI
 EXPOSE 8000
 
 # Команда для запуска приложения
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

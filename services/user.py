@@ -3,10 +3,10 @@ from typing import Annotated
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from app.dto.user_dto import UserRegisterRequest, UserLoginRequest
-from app.models.users import User
-from app.database.base_crud import BaseCRUD
-from app.security import hash_password, create_perpetual_token, verify_password, decode_access_token
+from dto.user_dto import UserRegisterRequest, UserLoginRequest
+from models.users import User
+from database.base_crud import BaseCRUD
+from security import hash_password, create_perpetual_token, verify_password, decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

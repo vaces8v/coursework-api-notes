@@ -1,10 +1,10 @@
 from fastapi import HTTPException, status
 
-from app.database.base_crud import BaseCRUD
-from app.dto.note_dto import NoteCreateRequest, NoteResponse, TagResponse
-from app.models.notes import Note, NotesTags
-from app.security import decode_access_token
-from app.database.database import async_session_maker
+from database.base_crud import BaseCRUD
+from dto.note_dto import NoteCreateRequest, NoteResponse, TagResponse
+from models.notes import Note, NotesTags
+from security import decode_access_token
+from database.database import async_session_maker
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 

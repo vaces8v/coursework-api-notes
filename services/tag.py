@@ -1,6 +1,6 @@
-from app.database.base_crud import BaseCRUD
-from app.dto.tag_dto import TagRequest, TagDB
-from app.models.notes import Tag
+from database.base_crud import BaseCRUD
+from dto.tag_dto import TagRequest, TagDB
+from models.notes import Tag
 
 
 class TagCRUD(BaseCRUD):

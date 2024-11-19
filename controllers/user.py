@@ -3,13 +3,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from app.dto.user_dto import (
+from dto.user_dto import (
     # Запросы
     UserRegisterRequest, UserLoginRequest,
     # Ответы
     UserTokenResponse, UserDB
 )
-from app.services import user as user_service
+from services import user as user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 

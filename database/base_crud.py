@@ -1,6 +1,6 @@
 from sqlalchemy import select, insert, update, delete
 
-from app.database.database import async_session_maker
+from database.database import async_session_maker
 
 
 class BaseCRUD:
