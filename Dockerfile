@@ -15,7 +15,7 @@ COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false && poetry install --no-dev && poetry add python-jose
 
 # Копируем исходный код приложения
-COPY ./ /
+COPY ./app /app
 
 # Открываем порт, на котором будет работать FastAPI
 EXPOSE 8000
