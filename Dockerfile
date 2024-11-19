@@ -17,6 +17,8 @@ RUN poetry config virtualenvs.create false && poetry install --no-dev && poetry 
 # Копируем исходный код приложения
 COPY ./ /
 
+RUN alembic upgrade head
+
 # Открываем порт, на котором будет работать FastAPI
 EXPOSE 8000
 
