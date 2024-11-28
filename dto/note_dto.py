@@ -25,6 +25,12 @@ class TagResponse(BaseModel):
     color: str
 
 
+class NoteUpdateRequest(BaseModel):
+    title: str
+    description: str
+    tags: list[int] = []
+
+
 class NoteResponse(BaseModel):
     id: int
     title: str

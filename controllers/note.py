@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
-from dto.note_dto import NoteCreateRequest, NoteResponse
+from dto.note_dto import NoteCreateRequest, NoteResponse, NoteUpdateRequest
 
 from services import note as note_service
 
@@ -33,6 +33,14 @@ async def get_by_id(id: int) -> NoteResponse:
 @router.post("/", status_code=201)
 async def create_note(dto: NoteCreateRequest, token: Annotated[str, Depends(oauth2_scheme)]):
     return await note_service.create_note(dto, token)
+
+@router.put("/{note_id}")
+async def update_note_by_id(note_id: int, dto: NoteUpdateRequest, token: Annotated[str, Depends(oauth2_scheme)]):
+    return await note_service.update_note(note_id, dto, token)
+
+@router.get("/export/excel")
+async def export_notes_to_excel(token: Annotated[str, Depends(oauth2_scheme)]):
+    return await note_service.export_to_excel(token)
 
 @router.delete("/{note_id}")
 async def delete_by_id(note_id: int, token: Annotated[str, Depends(oauth2_scheme)]):
