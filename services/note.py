@@ -5,8 +5,12 @@ from dto.note_dto import NoteCreateRequest, NoteResponse, TagResponse, NoteUpdat
 from models.notes import Note, NotesTags
 from security import decode_access_token
 from database.database import async_session_maker
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import joinedload
+from io import BytesIO
+from datetime import datetime
+from openpyxl import Workbook
+from fastapi.responses import StreamingResponse
 
 
 class NoteCRUD(BaseCRUD):
@@ -36,6 +40,7 @@ class NoteCRUD(BaseCRUD):
             res = await session.execute(query)
             return res.unique().scalars().all()
 
+
     @classmethod
     async def get_one(cls, note_id: int):
         async with async_session_maker() as session:
@@ -50,6 +55,15 @@ class NoteCRUD(BaseCRUD):
 
 class NoteTagsCRUD(BaseCRUD):
     model = NotesTags
+
+    @classmethod
+    async def delete_many(cls, note_id):
+        async with async_session_maker() as session:
+            async with session.begin():
+                await session.execute(
+                    delete(cls.model).where(cls.model.note_id == note_id)
+                )
+            await session.commit()
 
 
 async def get_all_my(token: str):
@@ -83,6 +97,7 @@ async def get_all_my(token: str):
         for note in notes
     ]
 
+
 async def get_all_my_archives(token: str):
     payload = decode_access_token(token)
     if payload is None:
@@ -113,6 +128,7 @@ async def get_all_my_archives(token: str):
         )
         for note in notes
     ]
+
 
 async def get_by_id(note_id: int) -> NoteResponse:
     note = await NoteCRUD.get_one(note_id)
@@ -191,6 +207,7 @@ async def archive_add_by_id(note_id: int, token: str):
 
     await NoteCRUD.update(model_id=note_id, is_archive=True)
 
+
 async def archive_remove_by_id(note_id: int, token: str):
     payload = decode_access_token(token)
     if payload is None:
@@ -221,7 +238,7 @@ async def update_note(note_id: int, data: NoteUpdateRequest, token: str):
     note = await NoteCRUD.get_one(note_id)
     if not note:
         raise HTTPException(status_code=404, detail="Заметка не найдена")
-    
+
     if str(note.user_id) != user_id:
         raise HTTPException(status_code=403, detail="Нет доступа к заметке")
 
@@ -232,32 +249,26 @@ async def update_note(note_id: int, data: NoteUpdateRequest, token: str):
     # Обновляем теги
     await NoteTagsCRUD.delete_many(note_id=note.id)
     for tag_id in data.tags:
-        await NoteTagsCRUD.create({"note_id": note.id, "tag_id": tag_id})
+        await NoteTagsCRUD.create(note_id=note.id, tag_id=tag_id)
 
-    await NoteCRUD.update(note)
+    await NoteCRUD.update(note_id, title=data.title, description=data.description)
     return await get_by_id(note.id)
-
-
-from io import BytesIO
-from datetime import datetime
-from openpyxl import Workbook
-from fastapi.responses import StreamingResponse
 
 
 async def export_to_excel(token: str):
     # Получаем все заметки пользователя
     notes = await get_all_my(token)
-    
+
     # Создаем новую книгу Excel
     wb = Workbook()
     ws = wb.active
     ws.title = "Мои заметки"
-    
+
     # Добавляем заголовки
     headers = ["ID", "Заголовок", "Описание", "Теги", "Дата создания", "Дата обновления"]
     for col, header in enumerate(headers, 1):
         ws.cell(row=1, column=col, value=header)
-    
+
     # Добавляем данные
     for row, note in enumerate(notes, 2):
         ws.cell(row=row, column=1, value=note.id)
@@ -266,7 +277,7 @@ async def export_to_excel(token: str):
         ws.cell(row=row, column=4, value=", ".join(tag.name for tag in note.tags))
         ws.cell(row=row, column=5, value=note.created_at.strftime("%Y-%m-%d %H:%M:%S"))
         ws.cell(row=row, column=6, value=note.updated_at.strftime("%Y-%m-%d %H:%M:%S") if note.updated_at else "")
-    
+
     # Настраиваем ширину столбцов
     for column in ws.columns:
         max_length = 0
@@ -279,15 +290,15 @@ async def export_to_excel(token: str):
                 pass
         adjusted_width = (max_length + 2)
         ws.column_dimensions[column[0].column_letter].width = adjusted_width
-    
+
     # Сохраняем в буфер
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-    
+
     # Формируем имя файла
     filename = f"notes_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    
+
     # Возвращаем файл для скачивания
     return StreamingResponse(
         buffer,
