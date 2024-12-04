@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr
 class UserDB(BaseModel):
     id: int
     name: str
+    is_admin: bool
     last_name: str | None
     email: EmailStr
     password_hash: str

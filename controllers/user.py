@@ -20,11 +20,6 @@ async def get_profile(token: Annotated[str, Depends(oauth2_scheme)]) -> UserDB:
     return await user_service.get_profile(token)
 
 
-@router.get("/")
-async def get_all_users() -> list[UserDB]:
-    return await user_service.get_all()
-
-
 @router.post("/", status_code=201)
 async def create_user(dto: UserRegisterRequest) -> UserTokenResponse:
     return await user_service.register(dto)
