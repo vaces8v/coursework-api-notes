@@ -43,7 +43,17 @@ async def remove_tag(id_tag: int, token: str):
         return {"ok": False}
 
 
-async def create_tag(data: TagRequest):
+async def create_tag(data: TagRequest, token: str):
+    if token:
+        payload = decode_access_token(token)
+        if payload is None:
+            raise HTTPException(status_code=401, detail="Не валидный токен")
+        user_id = payload.get("sub")
+        if not isinstance(user_id, str) or not user_id:
+            raise HTTPException(status_code=401, detail="Не валидный токен")
+        user = await UserCRUD.find_one_or_none(id=int(user_id))
+        if not user.is_admin:
+            raise HTTPException(status_code=403, detail="Нет доступа")
     tag_id = await TagCRUD.create_and_return_id(name=data.name, color=data.color)
     new_tag = await TagCRUD.find_one_or_none(id=tag_id)
     return new_tag

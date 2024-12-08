@@ -20,7 +20,7 @@ async def get_all_tags() -> list[TagDB]:
 
 @router.post("/")
 async def create_tag(dto: TagRequest, token: Annotated[str, Depends(oauth2_scheme)]):
-    return await tag_service.create_tag(dto)
+    return await tag_service.create_tag(dto, token)
 
 @router.delete("/{id_tag}")
 async def remove_tag(id_tag: int, token: Annotated[str, Depends(oauth2_scheme)]):
